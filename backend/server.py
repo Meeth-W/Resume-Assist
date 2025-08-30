@@ -4,6 +4,9 @@ import time
 
 from api import auth
 
+# -----------------------------------------------------------------------------
+# App Initialization
+# -----------------------------------------------------------------------------
 app = FastAPI()
 
 app.add_middleware(
@@ -17,6 +20,9 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 
 
+# -----------------------------------------------------------------------------
+# Routes
+# -----------------------------------------------------------------------------
 @app.get("/")
 async def read_root():
     return {
@@ -41,7 +47,9 @@ async def ping(request: Request):
         "ping_ms": round(latency, 2) if latency is not None else "Send 't' param to measure latency"
     }
 
-
+# -----------------------------------------------------------------------------
+# Run the app
+# -----------------------------------------------------------------------------
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=5005)

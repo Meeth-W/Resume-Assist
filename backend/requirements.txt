@@ -2,5 +2,7 @@ uvicorn
 colorama
 fastapi
 pymongo
-python_dotenv
+python-dotenv
 requests
+argon2-cffi
+PyJWT
