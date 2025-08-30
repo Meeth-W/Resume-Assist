@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 from datetime import datetime, timedelta, timezone
@@ -18,7 +17,7 @@ MONGO_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
 DB_NAME = os.getenv("MONGODB_DB", "resume_assist")
 USERS_COLL = "users"
 
-SECRET_KEY = os.getenv("JWT_SECRET", "dev-change-me")
+SECRET_KEY = os.getenv("JWT_SECRET", "temp-secret-i-will-change-one-day")
 ALGORITHM = os.getenv("JWT_ALG", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_MIN", "15"))
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_DAYS", "7"))
@@ -160,18 +159,15 @@ async def register(payload: RegisterRequest):
 @router.put("/update", response_model=UserPublic)
 async def update_account(payload: UpdateAccountRequest, user: dict = Depends(get_current_user)):
     updates = {k: v for k, v in payload.dict().items() if v is not None}
-    if not updates:
-        raise HTTPException(status_code=400, detail="No valid fields to update")
+    if not updates: raise HTTPException(status_code=400, detail="No valid fields to update")
 
     if "email" in updates:
         existing = db[USERS_COLL].find_one({"email": updates["email"], "_id": {"$ne": user["_id"]}})
-        if existing:
-            raise HTTPException(status_code=409, detail="Email already in use")
+        if existing: raise HTTPException(status_code=409, detail="Email already in use")
 
     if "phone_number" in updates:
         existing = db[USERS_COLL].find_one({"phone_number": updates["phone_number"], "_id": {"$ne": user["_id"]}})
-        if existing:
-            raise HTTPException(status_code=409, detail="Phone number already in use")
+        if existing: raise HTTPException(status_code=409, detail="Phone number already in use")
 
     db[USERS_COLL].update_one({"_id": user["_id"]}, {"$set": updates})
     user.update(updates)
@@ -181,3 +177,29 @@ async def update_account(payload: UpdateAccountRequest, user: dict = Depends(get
 async def delete_account(user: dict = Depends(get_current_user)):
     db[USERS_COLL].delete_one({"_id": user["_id"]})
     return {"message": "Account deleted successfully"}
+
+@router.post("/login", response_model=TokenResponse)
+async def login(payload: LoginRequest):
+    user = db[USERS_COLL].find_one({"username": payload.username})
+    if not user: raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    try: ph.verify(user["password_hash"], payload.password)
+    except Exception: raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    # Generate tokens
+    access_token = create_access_token(
+        user_id=str(user["_id"]),
+        username=user["username"],
+        token_version=user.get("token_version", 1)
+    )
+    refresh_token = create_refresh_token(
+        user_id=str(user["_id"]),
+        username=user["username"],
+        token_version=user.get("token_version", 1)
+    )
+
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60
+    )
