@@ -26,9 +26,11 @@ app.include_router(auth.router, prefix="/auth", tags=["auth"])
 @app.get("/")
 async def read_root():
     return {
-        "message": "Welcome to the Resume Assist API"
+        "message": "Welcome to the Resume Assist API. Visit /docs for API documentation.",
+        "version": "1.0.0",
+        "status": "running",
+        "timestamp": time.time()
     }
-
 
 @app.get("/ping")
 async def ping(request: Request):
