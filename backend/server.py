@@ -27,7 +27,7 @@ app.include_router(docs.router, prefix="/custom-docs", tags=["custom-docs"])
 @app.get("/")
 async def read_root():
     return {
-        "message": "Welcome to the Resume Assist API. Visit /docs for API documentation.",
+        "message": "Welcome to the Resume Assist API. Visit /docs or /custom-docs for API documentation.",
         "version": "1.0.0",
         "status": "running",
         "timestamp": time.time()
