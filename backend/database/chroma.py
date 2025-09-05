@@ -6,9 +6,9 @@ from typing import List
 CHROMA_PATH = "chroma"
 
 class ChromaDB:
-    def __init__(self, persist_directory: str = CHROMA_PATH, embedding_model: str = "amazon.titan-embed-text-v1"):
-        self.persist_directory = persist_directory
-        self.embedding_function = get_embedding_function(model_name=embedding_model)
+    def __init__(self):
+        self.persist_directory = CHROMA_PATH
+        self.embedding_function = get_embedding_function(model_name = "amazon.titan-embed-text-v1") # TODO: Update model once we switch to hugging face embeddings
         self.vectorstore = Chroma(persist_directory=self.persist_directory, embedding_function=self.embedding_function)
 
     def add_documents(self, documents: List[Document]):
