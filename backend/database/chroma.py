@@ -24,3 +24,10 @@ class ChromaDB:
     def clear(self):
         """Clear the entire vector store."""
         self.vectorstore.delete_collection()
+    
+    def load_and_add_documents_from_directory(self, directory_path: str, file_types: List[str] = None):
+        """Load documents from a directory, split them, and add to the vector store."""
+        documents = load_documents_from_directory(directory_path, file_types)
+        chunks = split_documents(documents)
+        self.add_documents(chunks)
+    
